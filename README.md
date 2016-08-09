@@ -1,6 +1,9 @@
-# swarm-bootstrap-virtualbox
+# docker-example-swarm-bootstrap-local
 
-Simple script to set up a Docker 1.12 swarm based on virtualbox nodes created by `docker-machine`.
+Simple script to set up a Docker 1.12 swarm for local testing. The nodes are provisioned using `docker-machine` with the virtualbox driver.
+
+There is no difference between nodes other than the naming convention we use to
+distinguish between managers and workers. In production, however, you might choose to use higher capacity instances (cpu+memory) for managers.
 
 ## Prerequisites
 
