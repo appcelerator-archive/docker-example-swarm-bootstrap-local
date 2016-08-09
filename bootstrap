@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Specify the number of managers and workers for the swarm
+MANAGER=3
+WORKER=3
+
+# Create the Docker hosts
+for i in $(seq 1 $MANAGER); do docker-machine create --driver virtualbox m$i; done
+for i in $(seq 1 $WORKER); do docker-machine create --driver virtualbox w$i; done
+
+# Init the swarm
+docker $(docker-machine config m1) swarm init --advertise-addr $(docker-machine ip m1):2377
+TM=$(docker $(docker-machine config m1) swarm join-token manager)
+TW=$(docker $(docker-machine config m1) swarm join-token worker)
+TOKENMANAGER=$([[ $TM =~ .*(SWMTKN[a-z0-9-]*[^ ]?).* ]] && echo ${BASH_REMATCH[1]})
+TOKENWORKER=$([[ $TW =~ .*(SWMTKN[a-z0-9-]*[^ ]?).* ]] && echo ${BASH_REMATCH[1]})
+
+# Add additional manager(s)
+if [ $MANAGER -gt 1 ]; then
+  for i in $(seq 2 $MANAGER); do
+    docker $(docker-machine config m$i) swarm join --token $TOKENMANAGER --advertise-addr $(docker-machine ip m$i):2377 $(docker-machine ip m1):2377
+  done
+fi
+
+# Add workers
+for i in $(seq 1 $WORKER); do
+  docker $(docker-machine config w$i) swarm join --token $TOKENWORKER $(docker-machine ip m1):2377
+done
+
+# Display nodes
+docker $(docker-machine config m$1) node ls
